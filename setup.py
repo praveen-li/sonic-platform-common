@@ -22,6 +22,7 @@ setup(
         'sonic_platform_base.sonic_thermal_control',
         'sonic_psu',
         'sonic_sfp',
+	'sonic_sensor',
         'sonic_thermal',
         'sonic_y_cable',
     ],
