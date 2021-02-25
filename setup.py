@@ -22,9 +22,9 @@ setup(
         'sonic_platform_base.sonic_thermal_control',
         'sonic_psu',
         'sonic_sfp',
-	'sonic_sensor',
         'sonic_thermal',
         'sonic_y_cable',
+        'sonic_sensor',
     ],
     # NOTE: Install also depends on sonic-config-engine for portconfig.py
     # This dependency should be eliminated by moving portconfig.py

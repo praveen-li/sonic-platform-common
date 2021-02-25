@@ -30,6 +30,12 @@ class SsdUtil(SsdBase):
     firmware = NOT_AVAILABLE
     temperature = NOT_AVAILABLE
     health = NOT_AVAILABLE
+    power_on_hours = NOT_AVAILABLE
+    power_cycle_count = NOT_AVAILABLE
+    total_bad_block_count = NOT_AVAILABLE
+    erase_count_max = NOT_AVAILABLE
+    erase_count_avg = NOT_AVAILABLE
+
     ssd_info = NOT_AVAILABLE
     vendor_ssd_info = NOT_AVAILABLE
 
@@ -80,6 +86,11 @@ class SsdUtil(SsdBase):
     def parse_innodisk_info(self):
         self.health = self._parse_re('Health:\s*(.+?)%', self.vendor_ssd_info)
         self.temperature = self._parse_re('Temperature\s*\[\s*(.+?)\]', self.vendor_ssd_info)
+        self.power_on_hours = self._parse_re('Power On Hours\s*\[\s*(.+?)\]', self.vendor_ssd_info)
+        self.power_cycle_count = self._parse_re('Power Cycle Count\s*\[\s*(.+?)\]', self.vendor_ssd_info)
+        self.total_bad_block_count = self._parse_re('Total Bad Block Count\s*\[\s*(.+?)\]', self.vendor_ssd_info)
+        self.erase_count_max = self._parse_re('Erase Count Max.\s*\[\s*(.+?)\]', self.vendor_ssd_info)
+        self.erase_count_avg = self._parse_re('Erase Count Avg.\s*\[\s*(.+?)\]', self.vendor_ssd_info)
 
     def parse_virtium_info(self):
         self.temperature = self._parse_re('Temperature_Celsius\s*\d*\s*(\d+?)\s+', self.vendor_ssd_info)
@@ -151,3 +162,48 @@ class SsdUtil(SsdBase):
             A string holding some vendor specific disk information
         """
         return self.vendor_ssd_info
+
+    def get_power_on_hours(self):
+        """
+        Retrieves power on hours for the given disk device
+
+        Returns:
+            An integer of power on hour
+        """
+	return self.power_on_hours
+
+    def get_power_cycle_count(self):
+        """
+        Retrieves power cycle count for the given disk device
+
+        Returns:
+            An integer of power cycle count
+        """
+	return self.power_cycle_count
+
+    def get_total_bad_block_count(self):
+        """
+        Retrieves total bad block count for the given disk device
+
+        Returns:
+            An integer of total bad block count
+        """
+        return self.total_bad_block_count
+
+    def get_erase_count_max(self):
+        """
+        Retrieves erase count max for the given disk device
+
+        Returns:
+            An integer of erase count max
+        """
+        return self.erase_count_max
+
+    def get_erase_count_avg(self):
+        """
+        Retrieves erase count avg for the given disk device
+
+        Returns:
+            An integer of erase count avg
+        """
+	return self.erase_count_avg

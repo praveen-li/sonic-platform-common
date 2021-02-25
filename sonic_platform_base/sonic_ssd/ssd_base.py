@@ -73,3 +73,48 @@ class SsdBase(object):
             A string holding some vendor specific disk information
         """
         raise NotImplementedError
+
+    def get_power_on_hours(self):
+        """
+        Retrieves power on hours for the given disk device
+
+        Returns:
+            An integer of power on hour
+        """
+        raise NotImplementedError
+
+    def get_power_cycle_count(self):
+        """
+        Retrieves power cycle count for the given disk device
+
+        Returns:
+            An integer of power cycle count
+        """
+        raise NotImplementedError
+
+    def get_total_bad_block_count(self):
+        """
+        Retrieves total bad block count for the given disk device
+
+        Returns:
+            An integer of total bad block count
+        """
+        raise NotImplementedError
+
+    def get_erase_count_max(self):
+        """
+        Retrieves erase count max for the given disk device
+
+        Returns:
+            An integer of erase count max
+        """
+        raise NotImplementedError
+
+    def get_erase_count_avg(self):
+        """
+        Retrieves erase count avg for the given disk device
+
+        Returns:
+            An integer of erase count avg
+        """
+        raise NotImplementedError

@@ -34,7 +34,7 @@ class SensorBase(object):
                         print("*************** SONiC CPU OUTPUT ***********")
                         print(stdout.rstrip("\n"))
                 else:
-			print('exit code: {}. Error -> {}'.format(returncode, stderr))
+                        print('exit code: {}. Error -> {}'.format(returncode, stderr))
                         sys.stderr.write(stderr)
 
         def get_data_api(self):
