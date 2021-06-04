@@ -170,7 +170,7 @@ class SsdUtil(SsdBase):
         Returns:
             An integer of power on hour
         """
-	return self.power_on_hours
+        return self.power_on_hours
 
     def get_power_cycle_count(self):
         """
@@ -179,7 +179,7 @@ class SsdUtil(SsdBase):
         Returns:
             An integer of power cycle count
         """
-	return self.power_cycle_count
+        return self.power_cycle_count
 
     def get_total_bad_block_count(self):
         """
@@ -206,4 +206,4 @@ class SsdUtil(SsdBase):
         Returns:
             An integer of erase count avg
         """
-	return self.erase_count_avg
+        return self.erase_count_avg

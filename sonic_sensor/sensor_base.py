@@ -1,11 +1,11 @@
 #!/usr/bin/python
 
 #########################################################################
-#									#
-# sensor_base.py							#
-#									#
-# Abstract base class for implementing a platform-specific class	#
-# to interact with sensors available from different sources in SONiC	#
+#                                                                       #
+# sensor_base.py                                                        #
+#                                                                       #
+# Abstract base class for implementing a platform-specific class        #
+# to interact with sensors available from different sources in SONiC    #
 #########################################################################
 
 import subprocess
