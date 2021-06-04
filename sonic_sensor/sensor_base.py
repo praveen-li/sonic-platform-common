@@ -32,7 +32,7 @@ class SensorBase(object):
                 ## if no error, get the sensor result ##
                 if returncode == 0:
                         print("*************** SONiC CPU OUTPUT ***********")
-                        print(stdout.rstrip("\n"))
+                        print(stdout.decode('utf-8').rstrip("\n"))
                 else:
                         print('exit code: {}. Error -> {}'.format(returncode, stderr))
                         sys.stderr.write(stderr)
