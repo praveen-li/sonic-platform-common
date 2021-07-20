@@ -10,8 +10,8 @@ try:
     import struct
     from ctypes import c_int8
 
-    import sonic_platform.platform
     from sonic_py_common import logger
+    import sonic_platform.platform
 except ImportError as e:
     # When build python3 xcvrd, it tries to do basic check which will import this file. However,
     # not all platform supports python3 API now, so it could cause an issue when importing
@@ -52,6 +52,7 @@ OFFSET_INTERNAL_TEMPERATURE = 22
 OFFSET_INTERNAL_VOLTAGE = 26
 OFFSET_NIC_TEMPERATURE = 727
 OFFSET_NIC_VOLTAGE = 729
+OFFSET_ENABLE_AUTO_SWITCH = 651
 
 # definitions of targets for getting the cursor
 # equalization parameters from the register spec
@@ -90,6 +91,10 @@ BER_TIMEOUT_SECS = 1
 EYE_TIMEOUT_SECS = 1
 
 MAX_NUM_LANES = 4
+
+# switching modes inside muxcable
+SWITCHING_MODE_MANUAL = 0
+SWITCHING_MODE_AUTO = 1
 
 # Valid return codes for upgrade firmware routine steps
 FIRMWARE_DOWNLOAD_SUCCESS = 0
@@ -597,6 +602,7 @@ def check_if_link_is_active_for_torB(physical_port):
         return False
 
 
+@hook_y_cable_simulator
 def enable_prbs_mode(physical_port, target, mode_value, lane_map):
     """
     This API specifically configures and enables the PRBS mode/type depending upon the mode_value the user provides.
@@ -669,6 +675,7 @@ def enable_prbs_mode(physical_port, target, mode_value, lane_map):
     return result
 
 
+@hook_y_cable_simulator
 def disable_prbs_mode(physical_port, target):
     """
     This API specifically disables the PRBS mode on the physcial port.
@@ -719,6 +726,7 @@ def disable_prbs_mode(physical_port, target):
     return result
 
 
+@hook_y_cable_simulator
 def enable_loopback_mode(physical_port, target, lane_map):
     """
     This API specifically configures and enables the Loopback mode on the port user provides.
@@ -776,6 +784,7 @@ def enable_loopback_mode(physical_port, target, lane_map):
     return result
 
 
+@hook_y_cable_simulator
 def disable_loopback_mode(physical_port, target):
     """
     This API specifically disables the Loopback mode on the port user provides.
@@ -829,6 +838,7 @@ def disable_loopback_mode(physical_port, target):
     return result
 
 
+@hook_y_cable_simulator
 def get_ber_info(physical_port, target):
     """
     This API specifically returns the BER (Bit error rate) value for a specfic port.
@@ -907,6 +917,7 @@ def get_ber_info(physical_port, target):
     return ber_result
 
 
+@hook_y_cable_simulator
 def get_eye_info(physical_port, target):
     """
     This API specifically returns the EYE height value for a specfic port.
@@ -984,6 +995,7 @@ def get_eye_info(physical_port, target):
     return eye_result
 
 
+@hook_y_cable_simulator
 def get_part_number(physical_port):
     """
     This API specifically returns the part number of the Y cable for a specfic port.
@@ -1010,6 +1022,7 @@ def get_part_number(physical_port):
     return part_number
 
 
+@hook_y_cable_simulator
 def get_vendor(physical_port):
     """
     This API specifically returns the vendor name of the Y cable for a specfic port.
@@ -1036,6 +1049,7 @@ def get_vendor(physical_port):
     return vendor_name
 
 
+@hook_y_cable_simulator
 def get_switch_count(physical_port, count_type):
     """
     This API specifically returns the switch count to change the Active TOR which has
@@ -1084,6 +1098,7 @@ def get_switch_count(physical_port, count_type):
     return count
 
 
+@hook_y_cable_simulator
 def get_target_cursor_values(physical_port, lane, target):
     """
     This API specifically returns the cursor equalization parameters for a target(NIC, TOR1, TOR2).
@@ -1140,6 +1155,7 @@ def get_target_cursor_values(physical_port, lane, target):
     return result
 
 
+@hook_y_cable_simulator
 def check_if_nic_lanes_active(physical_port):
     """
     This API specifically returns the byte value which denotes which nic lanes
@@ -1170,6 +1186,7 @@ def check_if_nic_lanes_active(physical_port):
     return result
 
 
+@hook_y_cable_simulator
 def get_firmware_version(physical_port, target):
 
     data = bytearray(FIRMWARE_INFO_PAYLOAD_SIZE)
@@ -1207,6 +1224,10 @@ def get_firmware_version(physical_port, target):
         build_slot2 = chr(rev_build_lsb_slot2) + chr(rev_build_msb_slot2)
         version_slot2 = str(rev_major_slot2) + "." + str(rev_minor_slot2)
 
+        '''TODO: the fields with slot number as suffix are redundant and must
+        be removed eventually since they are covered by the fields which
+        have version as prefix. '''
+
         result["build_slot1"] = build_slot1
         result["version_slot1"] = version_slot1
         result["build_slot2"] = build_slot2
@@ -1218,9 +1239,18 @@ def get_firmware_version(physical_port, target):
         result["empty_slot1"] = True if slot_status & 0x04 else False
         result["empty_slot2"] = True if slot_status & 0x40 else False
 
+        version_build_slot1 = version_slot1 + build_slot1
+        version_build_slot2 = version_slot2 + build_slot2
+
+        result["version_active"] = version_build_slot1 if slot_status & 0x01 else version_build_slot2
+        result["version_inactive"] = version_build_slot2 if slot_status & 0x01 else version_build_slot1
+        result["version_next"] = version_build_slot1 if slot_status & 0x02 else version_build_slot2
+
+
     return result
 
 
+@hook_y_cable_simulator
 def get_internal_voltage_temp(physical_port):
 
     curr_offset = OFFSET_INTERNAL_TEMPERATURE
@@ -1245,6 +1275,7 @@ def get_internal_voltage_temp(physical_port):
     return temp, voltage
 
 
+@hook_y_cable_simulator
 def get_nic_voltage_temp(physical_port):
 
     curr_offset = OFFSET_NIC_TEMPERATURE
@@ -1269,6 +1300,7 @@ def get_nic_voltage_temp(physical_port):
     return temp, voltage
 
 
+@hook_y_cable_simulator
 def get_local_temperature(physical_port):
 
     curr_offset = OFFSET_INTERNAL_TEMPERATURE
@@ -1284,6 +1316,7 @@ def get_local_temperature(physical_port):
     return temp
 
 
+@hook_y_cable_simulator
 def get_local_voltage(physical_port):
 
     if platform_chassis is not None:
@@ -1303,6 +1336,7 @@ def get_local_voltage(physical_port):
     return voltage
 
 
+@hook_y_cable_simulator
 def get_nic_temperature(physical_port):
 
     curr_offset = OFFSET_NIC_TEMPERATURE
@@ -1318,6 +1352,7 @@ def get_nic_temperature(physical_port):
     return temp
 
 
+@hook_y_cable_simulator
 def get_nic_voltage(physical_port):
 
     curr_offset = OFFSET_NIC_VOLTAGE
@@ -1337,6 +1372,7 @@ def get_nic_voltage(physical_port):
     return voltage
 
 
+@hook_y_cable_simulator
 def download_firmware(physical_port, fwfile):
     """ This routine should download and store the firmware on all the
     components of the Y cable of the port specified.
@@ -1365,6 +1401,8 @@ def download_firmware(physical_port, fwfile):
 
     return FIRMWARE_DOWNLOAD_SUCCESS
 
+
+@hook_y_cable_simulator
 def activate_firmware(physical_port):
     """ This routine should activate the downloaded firmware on all the
     components of the Y cable of the port specified.
@@ -1385,6 +1423,8 @@ def activate_firmware(physical_port):
 
     return FIRMWARE_ACTIVATE_SUCCESS
 
+
+@hook_y_cable_simulator
 def rollback_firmware(physical_port):
     """ This routine should rollback the firmware to the previous version
     which was being used by the cable. This API is intended to be called when the
@@ -1401,3 +1441,90 @@ def rollback_firmware(physical_port):
     """
 
     return FIRMWARE_ROLLBACK_SUCCESS
+
+
+@hook_y_cable_simulator
+def set_switching_mode(physical_port, mode):
+    """
+    This API specifically enables the auto switching or manual switching feature on the muxcable,
+    depending upon the mode entered by the user.
+    Autoswitch feature if enabled actually does an automatic toggle of the mux in case the active
+    side link goes down and basically points the mux to the other side.
+
+    Register Specification at offset 139 is documented below
+
+    Byte offset   bits      Name                   Description
+    139           0         Switch Target          "0x01 - enable auto switchover; if both TOR#1 and TOR#2 are linked and the active link fails,
+                                                    the cable will automatically switchover to the inactive link.
+                                                    0x00 - disable auto switchover.  Default is disabled."
+
+
+    Args:
+         physical_port:
+             an Integer, the actual physical port connected to Y end of a Y cable which can toggle the MUX
+         mode:
+             an Integer, specifies which type of switching mode we set the muxcable to
+             either SWITCHING_MODE_AUTO or SWITCHING_MODE_MANUAL
+
+    Returns:
+        a Boolean, true if the switch succeeded and false if it did not succeed.
+    """
+
+    if mode == SWITCHING_MODE_AUTO:
+        buffer = bytearray([1])
+    elif mode == SWITCHING_MODE_MANUAL:
+        buffer = bytearray([0])
+    else:
+        helper_logger.log_error(
+            "ERR: invalid mode provided for autoswitch feature, failed to do a switch")
+        return False
+
+    curr_offset = OFFSET_ENABLE_AUTO_SWITCH
+
+    if platform_chassis is not None:
+        result = platform_chassis.get_sfp(
+            physical_port).write_eeprom(curr_offset, 1, buffer)
+    else:
+        helper_logger.log_error("platform_chassis is not loaded, failed to do a switch target")
+        return False
+
+    return result
+
+
+@hook_y_cable_simulator
+def get_switching_mode(physical_port):
+    """
+    This API specifically returns which type of switching mode the cable is set to auto/manual
+
+    Register Specification at offset 139 is documented below
+
+    Byte offset   bits      Name                   Description
+    139           0         Switch Target          "0x01 - enable auto switchover; if both TOR#1 and TOR#2 are linked and the active link fails,
+                                                    the cable will automatically switchover to the inactive link.
+                                                    0x00 - disable auto switchover.  Default is disabled."
+
+
+    Args:
+         physical_port:
+             an Integer, the actual physical port connected to Y end of a Y cable which can toggle the MUX
+
+    Returns:
+        an Integer, SWITCHING_MODE_AUTO if auto switch is enabled.
+                    SWITCHING_MODE_MANUAL if manual switch is enabled.
+    """
+
+    curr_offset = OFFSET_ENABLE_AUTO_SWITCH
+
+    if platform_chassis is not None:
+        result = platform_chassis.get_sfp(
+            physical_port).read_eeprom(curr_offset, 1)
+        if y_cable_validate_read_data(result, 1, physical_port, "check if autoswitch is enabled") == EEPROM_READ_DATA_INVALID:
+            return EEPROM_ERROR
+    else:
+        helper_logger.log_error("platform_chassis is not loaded, failed to get the switch mode")
+        return -1
+
+    if result[0] == 1:
+        return SWITCHING_MODE_AUTO
+    else:
+        return SWITCHING_MODE_MANUAL
